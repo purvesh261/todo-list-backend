@@ -131,3 +131,22 @@ export const toggleComplete = async (todoId: string, userId: string): Promise<To
         isCompleted: todo.isCompleted
     };
 }
+
+export const completeDueTodos = async (): Promise<number> => {
+    try {
+        const result = await Todo.updateMany({
+            dueDate: { $lt: new Date() },
+            isDeleted: false,
+            isCompleted: false
+        }, {
+            $set: {
+                isCompleted: true
+            }
+        });
+        
+        return result.modifiedCount;
+    } catch (error) {
+        console.error('Error completing due todos:', error);
+        throw error;
+    }
+}
