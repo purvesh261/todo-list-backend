@@ -1,7 +1,9 @@
 import Todo, { ITodo } from '../models/todo.model.js';
 import { TodoResponse, PaginatedResponse, GetTodosParams } from '../types/todo.types.js';
+import logger from '../utils/logger.js';
 
 export const createTodo = async (todoData: Partial<ITodo>): Promise<TodoResponse> => {
+    logger.info(`TodoService.createTodo\nParams: ${todoData}`);
     const todo = new Todo(todoData);
     await todo.save();
     const response: TodoResponse = {
@@ -15,6 +17,7 @@ export const createTodo = async (todoData: Partial<ITodo>): Promise<TodoResponse
 }
 
 export const getTodoById = async (todoId: string, userId: string): Promise<TodoResponse | null> => {
+    logger.info(`TodoService.getTodoById\nParams: ${todoId} ${userId}`);
     const todo = await Todo.findOne({ _id: todoId, user: userId, isDeleted: false })
         .select('_id title description dueDate isCompleted')
         .lean()
@@ -32,6 +35,7 @@ export const getTodoById = async (todoId: string, userId: string): Promise<TodoR
 }
 
 export const updateTodo = async (todoId: string, userId: string, updateData: Partial<ITodo>): Promise<TodoResponse | null> => {
+    logger.info(`TodoService.updateTodo\nParams: ${todoId} ${userId} ${updateData}`);
     const todo = await Todo.findOneAndUpdate(
         { _id: todoId, user: userId, isDeleted: false },
         { $set: updateData },
@@ -53,6 +57,7 @@ export const updateTodo = async (todoId: string, userId: string, updateData: Par
 }
 
 export const deleteTodo = async (todoId: string, userId: string): Promise<boolean> => {
+    logger.info(`TodoService.deleteTodo\nParams: ${todoId} ${userId}`);
     const result = await Todo.findOneAndUpdate(
         { _id: todoId, user: userId, isDeleted: false },
         { isDeleted: true }
@@ -62,6 +67,7 @@ export const deleteTodo = async (todoId: string, userId: string): Promise<boolea
 }
 
 export const getTodos = async (userId: string, params: GetTodosParams): Promise<PaginatedResponse<TodoResponse>> => {
+    logger.info(`TodoService.getTodos\nParams: userId:${userId} todoParams:${JSON.stringify(params)}`);
     const { page = 1, limit = 10, filters = {}, sort = { field: 'createdAt', order: 'desc' } } = params;
     
     const query: any = { user: userId, isDeleted: false };
@@ -114,6 +120,8 @@ export const getTodos = async (userId: string, params: GetTodosParams): Promise<
 }
 
 export const toggleComplete = async (todoId: string, userId: string): Promise<TodoResponse | null> => {
+    logger.info(`TodoService.toggleComplete\nParams: ${todoId} ${userId}`);
+    
     const todo = await Todo.findOne({ _id: todoId, user: userId, isDeleted: false })
         .select('_id title description dueDate isCompleted')
         .exec();
@@ -130,4 +138,24 @@ export const toggleComplete = async (todoId: string, userId: string): Promise<To
         dueDate: todo.dueDate,
         isCompleted: todo.isCompleted
     };
+}
+
+export const completeDueTodos = async (): Promise<number> => {
+    logger.info(`TodoService.completeDueTodos`);
+    try {
+        const result = await Todo.updateMany({
+            dueDate: { $lt: new Date() },
+            isDeleted: false,
+            isCompleted: false
+        }, {
+            $set: {
+                isCompleted: true
+            }
+        });
+        
+        return result.modifiedCount;
+    } catch (error) {
+        console.error('Error completing due todos:', error);
+        throw error;
+    }
 }

@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import * as todoService from "../services/todo.service.js";
 import { GetTodosParams } from "../types/todo.types.js";
-
+import logger from "../utils/logger.js";
 
 export const createTodo = async (req: Request, res: Response): Promise<void> => {
+    logger.info(`TodoController.createTodo`);
     try {
         const todoData = {
             ...req.body,
@@ -17,6 +18,7 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
 };
 
 export const getTodos = async (req: Request, res: Response): Promise<void> => {
+    logger.info(`TodoController.getTodos`);
     const params: GetTodosParams = {
         page: Number(req.query.page) || 1,
         limit: Number(req.query.limit) || 10,
@@ -40,15 +42,18 @@ export const getTodos = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const getTodoById = async (req: Request, res: Response): Promise<void> => {
+    logger.info(`TodoController.getTodoById`);
     const todo = await todoService.getTodoById(req.params.id, req.userId as string);
     
     if (!todo) {
         res.status(404).json({ message: 'Todo not found' });
+        return;
     }
     res.json(todo);
 };
 
 export const updateTodo = async (req: Request, res: Response): Promise<void> => {
+    logger.info(`TodoController.updateTodo`);
     const todo = await todoService.updateTodo(req.params.id, req.userId as string, req.body);
     if (!todo) {
         res.status(404).json({ message: 'Todo not found' });
@@ -58,6 +63,7 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
 };
 
 export const deleteTodo = async (req: Request, res: Response): Promise<void> => {
+    logger.info(`TodoController.deleteTodo`);
     const success = await todoService.deleteTodo(req.params.id, req.userId as string);
     if (!success) {
         res.status(404).json({ message: 'Todo not found' });
@@ -67,6 +73,7 @@ export const deleteTodo = async (req: Request, res: Response): Promise<void> => 
 };
 
 export const toggleComplete = async (req: Request, res: Response): Promise<void> => {
+    logger.info(`TodoController.toggleComplete`);
     const todo = await todoService.toggleComplete(req.params.id, req.userId as string);
     if (!todo) {
         res.status(404).json({ message: 'Todo not found' });
