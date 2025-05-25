@@ -5,6 +5,7 @@ export interface IUser extends Document {
     _id: Types.ObjectId;
     email: string;
     password: string;
+    isDeleted: boolean;
 }
 
 const userSchema: Schema<IUser> = new Schema({
@@ -17,7 +18,14 @@ const userSchema: Schema<IUser> = new Schema({
         type: String,
         required: true,
     },
+    isDeleted: {
+        type: Boolean,
+        required: true,
+        default: false
+    }
 }, { timestamps: true });
+
+userSchema.index({ email: 1, isDeleted: 1 }, { unique: true });
 
 userSchema.pre('save', async function(next) {
     if (!this.isModified('password')) return next();

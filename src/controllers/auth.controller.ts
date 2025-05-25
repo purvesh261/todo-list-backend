@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-import { login, signup } from '../services/auth.service.js';
+import * as authService from '../services/auth.service.js';
 
-export const signupController = async (
+export const signup = async (
     req: Request,
     res: Response
 ): Promise<void> => {
     const { email, password } = req.body;
-    const token = await signup(email, password);
+    const token = await authService.signup(email, password);
     
     res.cookie('token', token, {
         httpOnly: true,
@@ -18,12 +18,12 @@ export const signupController = async (
     res.status(201).json({ message: 'User created successfully' });
 };
 
-export const loginController = async (
+export const login = async (
     req: Request,
     res: Response
 ): Promise<void> => {
     const { email, password } = req.body;
-    const token = await login(email, password);
+    const token = await authService.login(email, password);
     
     // Set token in HTTP-only cookie
     res.cookie('token', token, {
