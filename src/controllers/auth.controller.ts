@@ -1,10 +1,12 @@
 import { Request, Response } from 'express';
 import * as authService from '../services/auth.service.js';
+import logger from '../utils/logger.js';
 
 export const signup = async (
     req: Request,
     res: Response
 ): Promise<void> => {
+    logger.info(`AuthController.signup`)
     const { email, password } = req.body;
     const token = await authService.signup(email, password);
     
@@ -22,10 +24,10 @@ export const login = async (
     req: Request,
     res: Response
 ): Promise<void> => {
+    logger.info(`AuthController.login`)
     const { email, password } = req.body;
     const token = await authService.login(email, password);
     
-    // Set token in HTTP-only cookie
     res.cookie('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
