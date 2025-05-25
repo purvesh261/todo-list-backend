@@ -14,6 +14,53 @@ export const createTodo = async (todoData: Partial<ITodo>): Promise<TodoResponse
     return response;
 }
 
+export const getTodoById = async (todoId: string, userId: string): Promise<TodoResponse | null> => {
+    const todo = await Todo.findOne({ _id: todoId, user: userId, isDeleted: false })
+        .select('_id title description dueDate isCompleted')
+        .lean()
+        .exec();
+
+    if (!todo) return null;
+
+    return {
+        _id: todo._id.toString(),
+        title: todo.title,
+        description: todo.description,
+        dueDate: todo.dueDate,
+        isCompleted: todo.isCompleted
+    };
+}
+
+export const updateTodo = async (todoId: string, userId: string, updateData: Partial<ITodo>): Promise<TodoResponse | null> => {
+    const todo = await Todo.findOneAndUpdate(
+        { _id: todoId, user: userId, isDeleted: false },
+        { $set: updateData },
+        { new: true }
+    )
+    .select('_id title description dueDate isCompleted')
+    .lean()
+    .exec();
+
+    if (!todo) return null;
+
+    return {
+        _id: todo._id.toString(),
+        title: todo.title,
+        description: todo.description,
+        dueDate: todo.dueDate,
+        isCompleted: todo.isCompleted
+    };
+}
+
+export const deleteTodo = async (todoId: string, userId: string): Promise<boolean> => {
+    const result = await Todo.findOneAndUpdate(
+        { _id: todoId, user: userId, isDeleted: false },
+        { isDeleted: true }
+    ).exec();
+
+    return !!result;
+}
+
 export const getTodos = async (userId: string, params: GetTodosParams): Promise<PaginatedResponse<TodoResponse>> => {
     const { page = 1, limit = 10, filters = {}, sort = { field: 'createdAt', order: 'desc' } } = params;
     
@@ -63,5 +110,24 @@ export const getTodos = async (userId: string, params: GetTodosParams): Promise<
         page,
         limit,
         totalPages: Math.ceil(total / limit)
+    };
+}
+
+export const toggleComplete = async (todoId: string, userId: string): Promise<TodoResponse | null> => {
+    const todo = await Todo.findOne({ _id: todoId, user: userId, isDeleted: false })
+        .select('_id title description dueDate isCompleted')
+        .exec();
+
+    if (!todo) return null;
+
+    todo.isCompleted = !todo.isCompleted;
+    await todo.save();
+
+    return {
+        _id: todo._id.toString(),
+        title: todo.title,
+        description: todo.description,
+        dueDate: todo.dueDate,
+        isCompleted: todo.isCompleted
     };
 }
