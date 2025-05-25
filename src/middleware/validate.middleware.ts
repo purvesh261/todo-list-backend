@@ -12,7 +12,7 @@ export const validate = (schema: ValidationChain[]) => {
                 return acc;
             }, {});
             
-            res.status(400).json({ errors: formattedErrors });
+            res.status(400).json({ message: "Validation Error", errors: formattedErrors });
             return;
         }
         next();
